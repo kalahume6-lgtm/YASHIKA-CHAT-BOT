@@ -1,0 +1,9 @@
+pyrogram==2.0.106
+tgcrypto
+python-dotenv
+requests
+deep-translator
+psutil
+Flask
+uvloop
+aiosqlite
