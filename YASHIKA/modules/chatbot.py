@@ -187,8 +187,6 @@ async def cb_handler(client, query: CallbackQuery):
         )
 
 
-# ==================== MAIN REPLY HANDLER ====================
-
 @YASHIKA.on_message(filters.incoming & command_filter & \~filters.bot)
 async def chatbot_response(client, message: Message):
     try:
@@ -196,22 +194,17 @@ async def chatbot_response(client, message: Message):
         is_private = message.chat.type == ChatType.PRIVATE
         is_group = message.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP)
 
-        # Status check
         status = await get_chatbot_status(chat_id)
 
-        if is_group:
-            if status != "enabled":
-                return  # Group me sirf enabled hone pe reply
-        # Private me hamesha allow
+        if is_group and status != "enabled":
+            return
 
         if not message.text and not message.sticker:
             return
 
-        # Learn from reply
         if message.reply_to_message and message.text:
             await _save_from_message(message.reply_to_message, message)
 
-        # Decide whether to reply
         should_reply = False
         if is_private:
             should_reply = True
@@ -255,7 +248,6 @@ async def chatbot_response(client, message: Message):
             else:
                 await message.reply_text(response_text)
         else:
-            # Empty DB hone pe bhi reply do (testing ke liye)
             defaults = [
                 "Haan bolo?",
                 "Kya hua?",
@@ -266,7 +258,6 @@ async def chatbot_response(client, message: Message):
             ]
             await message.reply_text(random.choice(defaults))
 
-        # Track user/chat
         if is_group:
             await add_served_chat(chat_id)
         elif message.from_user:
@@ -303,11 +294,3 @@ async def _save_from_message(original_message: Message, reply_message: Message):
             await save_reply(word, reply_message.text.strip(), "none")
     except Exception as e:
         LOGGER.error(f"save_reply error: {e}")
-# ==================== TEMPORARY TEST HANDLER ====================
-
-@YASHIKA.on_message(filters.private & filters.text & \~filters.command(["start", "help", "ping", "test", "stats", "id", "chatbot", "lang", "status", "repo", "shayri"]))
-async def simple_private_reply(client, message: Message):
-    try:
-        await message.reply_text(f"Main alive hoon! ✅\nTumne likha: `{message.text}`")
-    except Exception as e:
-        LOGGER.error(f"simple_private_reply error: {e}")
