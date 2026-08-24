@@ -303,3 +303,11 @@ async def _save_from_message(original_message: Message, reply_message: Message):
             await save_reply(word, reply_message.text.strip(), "none")
     except Exception as e:
         LOGGER.error(f"save_reply error: {e}")
+# ==================== TEMPORARY TEST HANDLER ====================
+
+@YASHIKA.on_message(filters.private & filters.text & \~filters.command(["start", "help", "ping", "test", "stats", "id", "chatbot", "lang", "status", "repo", "shayri"]))
+async def simple_private_reply(client, message: Message):
+    try:
+        await message.reply_text(f"Main alive hoon! ✅\nTumne likha: `{message.text}`")
+    except Exception as e:
+        LOGGER.error(f"simple_private_reply error: {e}")
