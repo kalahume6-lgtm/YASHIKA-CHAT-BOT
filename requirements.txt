@@ -5,5 +5,4 @@ requests
 deep-translator
 psutil
 Flask
-uvloop
 aiosqlite
