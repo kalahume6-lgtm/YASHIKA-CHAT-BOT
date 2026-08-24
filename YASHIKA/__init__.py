@@ -1,6 +1,5 @@
 import logging
 import time
-import asyncio
 import os
 from pyrogram import Client
 from pyrogram.enums import ParseMode
@@ -8,12 +7,6 @@ import config
 
 # Ensure data directory exists
 os.makedirs(os.path.dirname(config.DB_PATH) if os.path.dirname(config.DB_PATH) else "data", exist_ok=True)
-
-try:
-    import uvloop
-    uvloop.install()
-except Exception:
-    pass
 
 logging.basicConfig(
     format="[%(asctime)s - %(levelname)s] - %(name)s - %(message)s",
@@ -79,4 +72,5 @@ def get_readable_time(seconds: int) -> str:
     return ping_time
 
 
+# Client instance (uvloop removed to avoid event loop error)
 YASHIKA = YASHIKA()
