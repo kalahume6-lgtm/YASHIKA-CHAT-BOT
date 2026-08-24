@@ -1,7 +1,7 @@
 import random
 from pyrogram import filters
 from pyrogram.errors import MessageEmpty
-from pyrogram.enums import ChatAction
+from pyrogram.enums import ChatAction, ChatType
 from pyrogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -35,15 +35,15 @@ from YASHIKA.modules.helpers import (
     get_tools_data_read,
 )
 
-IGNORE_COMMANDS = [
+IGNORE_COMMANDS = {
     "start", "aistart", "help", "repo", "ping", "stats", "id",
     "broadcast", "gcast", "chatbot", "status", "lang", "language",
     "setlang", "resetlang", "nolang", "shayri", "gf", "bf",
     "sari", "shari", "love", "test",
-]
+}
 
 
-def not_bot_command(_, __, message):
+def not_bot_command(_, __, message: Message):
     if not message or not message.text:
         return True
     text = message.text.strip()
@@ -62,35 +62,18 @@ async def status_command(client, message: Message):
     chat_id = message.chat.id
     current = await get_chatbot_status(chat_id)
     if current:
-        await message.reply(f"Chatbot status for this chat: **{current}**")
+        await message.reply(f"Chatbot status: **{current}**")
     else:
-        await message.reply("No status found for this chat (default: disabled in groups).")
+        await message.reply("Status: **not set** (groups me default disabled)")
 
 
 languages = {
-    "english": "en",
-    "hindi": "hi",
-    "russian": "ru",
-    "spanish": "es",
-    "arabic": "ar",
-    "turkish": "tr",
-    "german": "de",
-    "french": "fr",
-    "italian": "it",
-    "persian": "fa",
-    "indonesian": "id",
-    "portuguese": "pt",
-    "korean": "ko",
-    "japanese": "ja",
-    "urdu": "ur",
-    "bengali": "bn",
-    "telugu": "te",
-    "marathi": "mr",
-    "gujarati": "gu",
-    "kannada": "kn",
-    "malayalam": "ml",
-    "punjabi": "pa",
-    "tamil": "ta",
+    "english": "en", "hindi": "hi", "russian": "ru", "spanish": "es",
+    "arabic": "ar", "turkish": "tr", "german": "de", "french": "fr",
+    "italian": "it", "persian": "fa", "indonesian": "id", "portuguese": "pt",
+    "korean": "ko", "japanese": "ja", "urdu": "ur", "bengali": "bn",
+    "telugu": "te", "marathi": "mr", "gujarati": "gu", "kannada": "kn",
+    "malayalam": "ml", "punjabi": "pa", "tamil": "ta",
 }
 
 
@@ -125,19 +108,16 @@ async def language_selection_callback(client, callback_query: CallbackQuery):
         await set_chat_language(chat_id, lang_code)
         await callback_query.answer(f"Language set to {lang_code.title()}.", show_alert=True)
         await callback_query.message.edit_text(
-            f"Chat language has been set to **{lang_code.title()}**."
+            f"Chat language set to **{lang_code.title()}**."
         )
     else:
-        await callback_query.answer("Invalid language selection.", show_alert=True)
+        await callback_query.answer("Invalid language.", show_alert=True)
 
 
 @YASHIKA.on_message(filters.command(["resetlang", "nolang"]))
 async def reset_language(client, message: Message):
-    chat_id = message.chat.id
-    await set_chat_language(chat_id, "nolang")
-    await message.reply_text(
-        "**Bot language has been reset in this chat to mix language.**"
-    )
+    await set_chat_language(message.chat.id, "nolang")
+    await message.reply_text("**Language reset to mixed.**")
 
 
 @YASHIKA.on_message(filters.command("chatbot"))
@@ -147,8 +127,7 @@ async def chatbot_command(client, message: Message):
     if not existing:
         await set_chatbot_status(chat_id, "disabled")
     await message.reply_text(
-        f"Chat: {message.chat.title or 'Private'}\n"
-        f"**Choose an option to enable/disable the chatbot.**",
+        f"Chat: {message.chat.title or 'Private'}\n**Enable / Disable chatbot:**",
         reply_markup=InlineKeyboardMarkup(CHATBOT_ON),
     )
 
@@ -167,18 +146,11 @@ async def cb_handler(client, query: CallbackQuery):
         )
     elif data == "CLOSE":
         await query.message.delete()
-        await query.answer("Closed menu!", show_alert=True)
+        await query.answer("Closed!", show_alert=True)
     elif data == "BACK":
         await query.message.edit(
             text=START.format(YASHIKA.mention or "Bot", 0, 0, "0s"),
             reply_markup=InlineKeyboardMarkup(DEV_OP),
-        )
-    elif data == "SOURCE":
-        from YASHIKA.modules.helpers import SOURCE_READ
-        await query.message.edit(
-            text=SOURCE_READ,
-            reply_markup=InlineKeyboardMarkup(BACK),
-            disable_web_page_preview=True,
         )
     elif data == "ABOUT":
         await query.message.edit(
@@ -202,96 +174,99 @@ async def cb_handler(client, query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup(HELP_BTN),
         )
     elif data == "enable_chatbot":
-        chat_id = query.message.chat.id
-        await set_chatbot_status(chat_id, "enabled")
-        await query.answer("Chatbot enabled ✅", show_alert=True)
+        await set_chatbot_status(query.message.chat.id, "enabled")
+        await query.answer("Chatbot Enabled ✅", show_alert=True)
         await query.edit_message_text(
-            f"Chat: {query.message.chat.title or 'Private'}\n"
-            f"**Chatbot has been enabled.**"
+            f"Chat: {query.message.chat.title or 'Private'}\n**Chatbot Enabled.**"
         )
     elif data == "disable_chatbot":
-        chat_id = query.message.chat.id
-        await set_chatbot_status(chat_id, "disabled")
-        await query.answer("Chatbot disabled!", show_alert=True)
+        await set_chatbot_status(query.message.chat.id, "disabled")
+        await query.answer("Chatbot Disabled", show_alert=True)
         await query.edit_message_text(
-            f"Chat: {query.message.chat.title or 'Private'}\n"
-            f"**Chatbot has been disabled.**"
-        )
-    elif data == "choose_lang":
-        await query.answer("Choose chatbot language for this chat.", show_alert=True)
-        await query.message.edit_text(
-            "**Please select your preferred language for the chatbot.**",
-            reply_markup=generate_language_buttons(languages),
+            f"Chat: {query.message.chat.title or 'Private'}\n**Chatbot Disabled.**"
         )
 
 
-@YASHIKA.on_message(filters.incoming & command_filter)
+# ==================== MAIN REPLY HANDLER ====================
+
+@YASHIKA.on_message(filters.incoming & command_filter & \~filters.bot)
 async def chatbot_response(client, message: Message):
     try:
         chat_id = message.chat.id
-        status = await get_chatbot_status(chat_id)
-        is_group = str(message.chat.type) in ("group", "supergroup") or (
-            hasattr(message.chat.type, "name")
-            and message.chat.type.name in ("GROUP", "SUPERGROUP")
-        )
+        is_private = message.chat.type == ChatType.PRIVATE
+        is_group = message.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP)
 
-        # In groups: only reply if explicitly enabled
-        if status == "disabled":
-            return
-        if status is None and is_group:
-            return
+        # Status check
+        status = await get_chatbot_status(chat_id)
+
+        if is_group:
+            if status != "enabled":
+                return  # Group me sirf enabled hone pe reply
+        # Private me hamesha allow
 
         if not message.text and not message.sticker:
             return
 
-        replied_to_bot = (
-            message.reply_to_message
-            and message.reply_to_message.from_user
-            and message.reply_to_message.from_user.id == YASHIKA.id
-        )
-
-        if replied_to_bot or not message.reply_to_message:
-            await client.send_chat_action(message.chat.id, ChatAction.TYPING)
-            reply_data = await get_reply(message.text or "")
-
-            if reply_data:
-                response_text = reply_data["text"]
-                chat_lang = await get_chat_language(chat_id)
-
-                if not chat_lang or chat_lang == "nolang":
-                    translated_text = response_text
-                else:
-                    try:
-                        translated_text = GoogleTranslator(
-                            source="auto", target=chat_lang
-                        ).translate(response_text)
-                    except Exception:
-                        translated_text = response_text
-
-                check = reply_data.get("check", "none")
-                if check == "sticker":
-                    await message.reply_sticker(reply_data["text"])
-                elif check == "photo":
-                    await message.reply_photo(reply_data["text"])
-                elif check == "video":
-                    await message.reply_video(reply_data["text"])
-                elif check == "audio":
-                    await message.reply_audio(reply_data["text"])
-                elif check == "gif":
-                    await message.reply_animation(reply_data["text"])
-                else:
-                    await message.reply_text(translated_text)
-            else:
-                # No learned reply found
-                if random.random() < 0.3:  # occasionally reply
-                    await message.reply_text(
-                        "**I don't understand. What are you saying??**"
-                    )
-
-        # Learn from replies
+        # Learn from reply
         if message.reply_to_message and message.text:
             await _save_from_message(message.reply_to_message, message)
 
+        # Decide whether to reply
+        should_reply = False
+        if is_private:
+            should_reply = True
+        elif message.reply_to_message and message.reply_to_message.from_user:
+            if message.reply_to_message.from_user.id == YASHIKA.id:
+                should_reply = True
+        elif not message.reply_to_message:
+            should_reply = True
+
+        if not should_reply:
+            return
+
+        await client.send_chat_action(chat_id, ChatAction.TYPING)
+
+        text = (message.text or "").strip()
+        reply_data = await get_reply(text) if text else None
+
+        if reply_data:
+            response_text = reply_data["text"]
+            chat_lang = await get_chat_language(chat_id)
+
+            if chat_lang and chat_lang != "nolang":
+                try:
+                    response_text = GoogleTranslator(
+                        source="auto", target=chat_lang
+                    ).translate(response_text)
+                except Exception:
+                    pass
+
+            check = reply_data.get("check", "none")
+            if check == "sticker":
+                await message.reply_sticker(reply_data["text"])
+            elif check == "photo":
+                await message.reply_photo(reply_data["text"])
+            elif check == "video":
+                await message.reply_video(reply_data["text"])
+            elif check == "audio":
+                await message.reply_audio(reply_data["text"])
+            elif check == "gif":
+                await message.reply_animation(reply_data["text"])
+            else:
+                await message.reply_text(response_text)
+        else:
+            # Empty DB hone pe bhi reply do (testing ke liye)
+            defaults = [
+                "Haan bolo?",
+                "Kya hua?",
+                "Samajh nahi aaya 😅",
+                "Phir se bolo?",
+                "Hmm...",
+                "Ji?",
+            ]
+            await message.reply_text(random.choice(defaults))
+
+        # Track user/chat
         if is_group:
             await add_served_chat(chat_id)
         elif message.from_user:
@@ -310,7 +285,6 @@ async def _save_from_message(original_message: Message, reply_message: Message):
     try:
         if not original_message or not original_message.text:
             return
-
         word = original_message.text.strip()
         if not word:
             return
@@ -326,6 +300,6 @@ async def _save_from_message(original_message: Message, reply_message: Message):
         elif reply_message.animation:
             await save_reply(word, reply_message.animation.file_id, "gif")
         elif reply_message.text:
-            await save_reply(word, reply_message.text, "none")
+            await save_reply(word, reply_message.text.strip(), "none")
     except Exception as e:
-        LOGGER.error(f"Error in save_reply: {e}")
+        LOGGER.error(f"save_reply error: {e}")
