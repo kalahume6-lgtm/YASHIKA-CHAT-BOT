@@ -1,0 +1,37 @@
+{
+  "name": "YASHIKA-CHAT-BOT",
+  "description": "Advanced Telegram Chat Bot with SQLite - Learns & Replies (No MongoDB)",
+  "repository": "https://github.com/kalahume6-lgtm/YASHIKA-CHAT-BOT",
+  "keywords": ["telegram", "chatbot", "pyrogram", "sqlite"],
+  "env": {
+    "API_ID": {
+      "description": "Get from my.telegram.org",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Get from my.telegram.org",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Get from @BotFather",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Your Telegram User ID",
+      "required": true
+    },
+    "SUPPORT_GRP": {
+      "description": "Support group username (without @)",
+      "required": false
+    },
+    "UPDATE_CHNL": {
+      "description": "Updates channel username (without @)",
+      "required": false
+    },
+    "OWNER_USERNAME": {
+      "description": "Your Telegram username (without @)",
+      "required": false
+    }
+  },
+  "stack": "container"
+}
